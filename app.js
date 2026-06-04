@@ -7,6 +7,8 @@ const errorHandler =
 require("./middleware/errorHandler");
 const healthRoute =
 require("./routes/healthRoute");
+const cryptoRoutes =
+require("./routes/cryptoRoutes");
 
 const app = express();
 
@@ -18,6 +20,10 @@ app.use(rateLimiter);
 app.use(
   "/api/v1/health",
   healthRoute
+);
+app.use(
+  "/api/v1",
+  cryptoRoutes
 );
 app.use(errorHandler);
 
