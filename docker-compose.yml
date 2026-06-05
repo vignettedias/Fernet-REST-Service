@@ -1,0 +1,16 @@
+services:
+
+  fernet-rest-service:
+
+    build: .
+
+    container_name:
+      fernet-rest-service
+
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - .env
+
+    restart: unless-stopped
