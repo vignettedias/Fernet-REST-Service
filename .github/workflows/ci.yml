@@ -10,12 +10,13 @@ on:
       - main
 
 jobs:
-
   test-and-build:
 
     runs-on: ubuntu-latest
-env:
-  FERNET_SECRET: ${{ secrets.FERNET_SECRET }}
+
+    env:
+      FERNET_SECRET: ${{ secrets.FERNET_SECRET }}
+
     steps:
 
       - name: Checkout Repository
