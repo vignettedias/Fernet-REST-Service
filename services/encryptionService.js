@@ -574,26 +574,73 @@ function encrypt(text, fernetKeyB64, options = {}) {
 function decrypt(tokenText, fernetKeyB64, options = {}) {
   if (!tokenText) return "";
 
-  // ── Step 1: base64url decode ──────────────────────────────────
-  const rawBuf = fromBase64Url(tokenText);
+  // Normalize input
+  const suppliedToken = String(tokenText).trim();
 
-  // ── Step 2: parse binary token fields ────────────────────────
-  const { timestamp, iv, ciphertext, hmac, dataForHmac } =
-    parseBinaryToken(rawBuf);
+  // Decode Base64URL token
+  const rawBuf = fromBase64Url(suppliedToken);
 
-  // ── Step 3: key derivation ────────────────────────────────────
-  const { signingKey, encryptionKey } = deriveKeys(fernetKeyB64);
+  /*
+   * Canonical Base64URL Validation
+   *
+   * Security rationale:
+   *
+   * Fernet integrity protection operates on the
+   * decoded binary token. In certain edge cases,
+   * different textual Base64URL strings can decode
+   * to the same binary representation.
+   *
+   * To guarantee representation integrity as well,
+   * we re-encode the decoded bytes and ensure the
+   * supplied token matches the canonical form.
+   *
+   * This causes any non-canonical representation
+   * to be rejected before Fernet parsing begins.
+   */
+  const canonicalToken = toBase64Url(rawBuf);
 
-  // ── Step 4: HMAC verification (throws on mismatch) ───────────
-  verifyHmac(signingKey, dataForHmac, hmac);
+  if (canonicalToken !== suppliedToken) {
+    throw new Error(
+      "Non-canonical Base64URL token representation detected."
+    );
+  }
 
-  // ── Step 5: TTL check (throws if expired) ─────────────────────
-  checkTTL(timestamp, options.ttl || 0);
+  // Parse Fernet token
+  const {
+    timestamp,
+    iv,
+    ciphertext,
+    hmac,
+    dataForHmac
+  } = parseBinaryToken(rawBuf);
 
-  // ── Step 6 & 7: AES-128-CBC decrypt + PKCS7 unpad ────────────
-  const plaintextBytes = aesCbcDecrypt(ciphertext, encryptionKey, iv);
+  // Derive signing/encryption keys
+  const {
+    signingKey,
+    encryptionKey
+  } = deriveKeys(fernetKeyB64);
 
-  // ── Step 8: UTF-8 decode ──────────────────────────────────────
+  // Verify token integrity
+  verifyHmac(
+    signingKey,
+    dataForHmac,
+    hmac
+  );
+
+  // Verify TTL
+  checkTTL(
+    timestamp,
+    options.ttl || 0
+  );
+
+  // Decrypt ciphertext
+  const plaintextBytes =
+    aesCbcDecrypt(
+      ciphertext,
+      encryptionKey,
+      iv
+    );
+
   return plaintextBytes.toString("utf8");
 }
 
@@ -669,14 +716,15 @@ const _service = createService(process.env.FERNET_SECRET);
  */
 function getSecurityMetadata() {
   return {
-    library:                 "custom (no external dependencies)",
-    encryptionAlgorithm:     "AES-128-CBC",
-    authenticationAlgorithm: "HMAC-SHA256",
-    paddingScheme:           "PKCS7",
-    encoding:                "URL-Safe Base64",
-    keyManagement:           "Environment Variable (FERNET_SECRET)",
-    tamperProtection:        true,
-  };
+  library: "custom (no external dependencies)",
+  encryptionAlgorithm: "AES-128-CBC",
+  authenticationAlgorithm: "HMAC-SHA256",
+  paddingScheme: "PKCS7",
+  encoding: "URL-Safe Base64",
+  canonicalEncodingValidation: true,
+  keyManagement: "Environment Variable (FERNET_SECRET)",
+  tamperProtection: true,
+};
 }
 
 module.exports = {
@@ -757,7 +805,13 @@ if (require.main === module) {
   // Tamper detection
   console.log("\n--- Tamper detection test ---");
   const goodToken  = service.encrypt("sensitive");
-  const tampered   = goodToken.slice(0, -4) + "XXXX"; // corrupt last chars
+  const midpoint =
+  Math.floor(goodToken.length / 2);
+
+const tampered =
+  goodToken.substring(0, midpoint) +
+  "X" +
+  goodToken.substring(midpoint + 1); // corrupt last chars
   try {
     service.decrypt(tampered);
     console.log("[FAIL] Should have thrown HMAC error");

@@ -491,8 +491,27 @@ Supports deployment across:
 Enables portability and repeatable deployments.
 
 ---
+# 12. Phase 8 Security Hardening
 
-# 12. Challenges Encountered
+During final validation, an additional
+Canonical Base64URL Validation layer
+was introduced.
+
+This enhancement ensures that incoming
+Fernet tokens must match their canonical
+Base64URL representation.
+
+Benefits:
+
+- Prevents alternate textual encodings
+- Improves token representation integrity
+- Provides stricter tamper detection
+- Strengthens input validation
+
+This validation occurs before Fernet
+token parsing and HMAC verification.
+
+# 13. Challenges Encountered
 
 Several engineering challenges were encountered and resolved.
 
@@ -518,7 +537,7 @@ Resolved through dedicated testing setup and environment initialization.
 
 ---
 
-# 13. Key Learnings
+# 14. Key Learnings
 
 This project provided practical experience in:
 
@@ -537,7 +556,7 @@ It demonstrated how a standalone SDK can be transformed into a reusable and scal
 
 ---
 
-# 14. Conclusion
+# 15. Conclusion
 
 The project successfully transformed a custom Fernet-compatible cryptographic SDK into a secure, Dockerized REST microservice. The original cryptographic engine remained unchanged and continued to serve as the core security component. Additional capabilities including authentication, validation, structured logging, automated testing, Docker deployment, Docker Compose orchestration, and GitHub Actions CI/CD were integrated to create a production-oriented solution.
 
