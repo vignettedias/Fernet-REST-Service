@@ -681,18 +681,11 @@ function getSecurityMetadata() {
 
 module.exports = {
 
-  // ── Original public API (exact same names & behaviour) ─────
-
-  /** Encrypts any value; returns "" for falsy input. */
   encrypt: (text) => _service.encrypt(text),
 
-  /** Decrypts a Fernet token; returns "" for falsy input. */
   decrypt: (tokenText) => _service.decrypt(tokenText),
 
-  /** Cryptographic metadata descriptor (matches original). */
   getSecurityMetadata,
-
-  // ── Low-level primitives (bonus; useful for unit tests) ────
 
   generateKey,
   deriveKeys,
@@ -711,13 +704,11 @@ module.exports = {
   assembleBinaryToken,
   parseBinaryToken,
 
-  /**
-   * createService(key) — factory for key-bound encrypt/decrypt pairs.
-   * Useful when different parts of the app need different keys.
-   */
   createService,
-};
 
+  rawEncrypt: encrypt,
+  rawDecrypt: decrypt,
+};
 
 // ─────────────────────────────────────────────────────────────
 // §13  QUICK SELF-TEST  (runs only when executed directly)
