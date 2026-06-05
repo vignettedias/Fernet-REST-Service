@@ -18,12 +18,16 @@ exports.encrypt = (req, res, next) => {
   try {
     const { plaintext } = req.body;
 
-    if (!plaintext) {
-      return res.status(400).json({
-        success: false,
-        message: "plaintext is required"
-      });
-    }
+    if (
+  typeof plaintext !== "string" ||
+  plaintext.trim().length === 0
+) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "plaintext must be a non-empty string"
+  });
+}
 
     const ciphertext =
       encryptionService.encrypt(plaintext);
@@ -42,12 +46,16 @@ exports.decrypt = (req, res, next) => {
   try {
     const { ciphertext } = req.body;
 
-    if (!ciphertext) {
-      return res.status(400).json({
-        success: false,
-        message: "ciphertext is required"
-      });
-    }
+    if (
+  typeof ciphertext !== "string" ||
+  ciphertext.trim().length === 0
+) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "ciphertext must be a non-empty string"
+  });
+}
 
     const plaintext =
       encryptionService.decrypt(ciphertext);
