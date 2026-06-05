@@ -67,7 +67,32 @@ docker compose up --build
 npm test
 
 ---
+## Architecture
+Client
+│
+│ HTTPS REST
+▼
+API Gateway / NGINX
+│
+▼
+Fernet REST Service
+│
+├── Routes
+├── Controllers
+├── Middleware
+├── Logging
+├── Authentication
+│
+▼
+Custom Fernet Engine
+│
+├── AES-128-CBC
+├── HMAC-SHA256
+├── PKCS7
+├── TTL Validation
+└── Tamper Detection
 
+---
 ## License
 
 MIT
