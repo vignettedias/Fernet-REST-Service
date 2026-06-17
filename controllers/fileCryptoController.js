@@ -61,11 +61,22 @@ exports.decryptFile =
         originalFileName
       );
 
-    res.status(200).json({
-      success: true,
-      decryptedPath:
-        result.decryptedPath
-    });
+    const fs =
+      require("fs");
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${originalFileName}"`
+    );
+
+    res.setHeader(
+      "Content-Type",
+      "application/octet-stream"
+    );
+
+    fs.createReadStream(
+      result.decryptedPath
+    ).pipe(res);
 
   } catch (err) {
     next(err);
